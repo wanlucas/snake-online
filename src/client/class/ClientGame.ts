@@ -1,6 +1,6 @@
 import Game from "../../class/Game";
 import ClientPlayer from "./ClientPlayer";
-import { io, Socket } from "socket.io-client";
+import io, { Socket } from 'socket.io-client';
 
 export interface ClientGameOptions {
   width: number;
@@ -23,11 +23,9 @@ export default class ClientGame extends Game {
     this.context = context;
     this.width = options.width || 800;
     this.height = options.height || 500;
-    this.io = io(process.env.NEXT_PUBLIC_SITE_URL!, {
-      path: '/api/socket/io',
-      // transports: ['websocket'],
-      addTrailingSlash: false,
-    })
+    this.io = io();
+
+    this.start();
   }
   
   public async start() {

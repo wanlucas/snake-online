@@ -8,10 +8,10 @@ const server = http.createServer(app);
 const io = new Server(server);
 const port = process.env.PORT || 8080;
 
-app.use(express.static(path.join(__dirname, '/client')));
+app.use(express.static(path.join(__dirname, '../public/')));
 
 app.get('/', (req: Request, res: Response) => {
-  return res.sendFile(path.join(__dirname, '/client/index.html'));
+  return res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
 io.on('connection', (socket: any) => {
