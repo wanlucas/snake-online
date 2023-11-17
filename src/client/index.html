@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snake</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <script type="module" src="/game.js"></script>
+</head>
+<body>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #000;
+    }
+    
+    #canvas {
+      position: absolute;
+      inset: 0;
+      margin: auto;
+      border: 2px solid white;
+      border-radius: 5px;
+    }
+    </style>
+  <canvas width="900px" height="650px" id="canvas"></canvas>
+</body>
+</html>
