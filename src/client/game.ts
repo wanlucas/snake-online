@@ -10,4 +10,10 @@ const game = new ClientGame(context, {
   height,
 });
 
-console.log(game);
+window.addEventListener('keydown', (event: KeyboardEvent) => {
+  game.onInput(event.key, true);
+});
+
+window.addEventListener('keyup', (event: KeyboardEvent) => {
+  game.onInput(event.key, false);
+});
