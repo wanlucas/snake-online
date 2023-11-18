@@ -14,13 +14,9 @@ const game = new Game(io);
 app.use(express.static(path.join(__dirname, '../public/')));
 
 app.get('/', (req: Request, res: Response) => {
-  return res.sendFile(path.join(__dirname, '../public/index.html'));
-});
-
-io.on('connection', (socket: any) => {
-  console.log('a user connected');
+	return res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
 server.listen(port, () => {
-  console.log(`Conectado na porta ${port}`);
+	console.log(`Conectado na porta ${port}`);
 });
