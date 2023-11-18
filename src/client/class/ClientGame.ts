@@ -113,12 +113,12 @@ export default class ClientGame {
 	private draw() {
 		this.context.clearRect(0, 0, this.width, this.height);
 
-		this.players.forEach((player: ClientPlayer) => {
-			player.draw(this.context);
-		});
-
 		this.fruits.forEach((fruit: ClientFruit) => {
 			fruit.draw(this.context);
+		});
+
+		this.players.forEach((player: ClientPlayer) => {
+			player.draw(this.context);
 		});
 	}
 

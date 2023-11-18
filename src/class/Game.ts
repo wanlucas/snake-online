@@ -43,8 +43,8 @@ export default class Game {
 		entityH: 0,
 	}) {
 		return {
-			x: Math.floor(Math.random() * (this.width - entityW)),
-			y: Math.floor(Math.random() * (this.height - entityH)),
+			x: Math.floor(Math.random() * (this.width - entityW) / config.tileSize) * config.tileSize,
+			y: Math.floor(Math.random() * (this.height - entityH) / config.tileSize) * config.tileSize,
 		};
 	}
 

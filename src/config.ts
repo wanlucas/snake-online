@@ -1,6 +1,7 @@
 export default {
 	width: 800,
 	height: 600,
+	tileSize: 15,
 	fruit: {
 		size: 15
 	},
