@@ -7,6 +7,7 @@ export enum Events {
   Disconnect = 'disconnect',
   NewPlayer = 'new-player',
   NewFruit = 'new-fruit',
+  RemoveFruit = 'remove-fruit',
   Preload = 'preload',
   ChangeDirection = 'change-direction',
 }

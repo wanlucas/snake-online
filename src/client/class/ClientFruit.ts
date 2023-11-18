@@ -2,9 +2,11 @@ import Fruit from '../../class/Fruit';
 
 export default class ClientFruit extends Fruit {
 	constructor(fruit: Fruit) {
-		super(fruit.position, {
-			size: fruit.size,
-		});
+		super(
+			fruit.id,
+			fruit.position, 
+			{ size: fruit.size }
+		);
 	}
 
 	public draw(context: CanvasRenderingContext2D) {

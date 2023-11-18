@@ -8,6 +8,7 @@ export default class Fruit {
 	public size: number;
 
 	constructor(
+    public id: number,
     public position: Position,
     options: FruitOptions = {},
 	) {

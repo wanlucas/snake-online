@@ -74,6 +74,10 @@ export default class ClientGame {
 		this.addFruit(fruit);
 	}
 
+	private onRemoveFruit(id: number) {
+		this.fruits = this.fruits.filter((fruit: ClientFruit) => fruit.id !== id);
+	}
+
 	public onInput(input: string, press: boolean) {
 		if (!this.localPlayer) return;
     
@@ -129,6 +133,7 @@ export default class ClientGame {
 		this.io.on(Events.NewPlayer, (data: NewPlayerPayload) => this.onNewPlayer(data));
 		this.io.on(Events.Tick, (data: TickPayload) => this.onTick(data));
 		this.io.on(Events.NewFruit, (data: NewFruitPayload) => this.onNewFruit(data));
+		this.io.on(Events.RemoveFruit, (id: number) => this.onRemoveFruit(id));
 	}
 
 	public stop() {

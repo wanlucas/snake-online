@@ -3,6 +3,7 @@ import Player, { Direction } from './Player';
 import { ChangeDirectionPayload } from '../interface/event';
 import { Events } from '../interface/event';
 import Fruit from './Fruit';
+import Collision from '../utils/Collision';
 
 interface GameConfig {
   tileSize: number;
@@ -51,17 +52,23 @@ export default class Game {
 	}
 
 	private addFruit() : Fruit{
-		const fruit = new Fruit(
-			this.randomPosition({
-				entityW: this.config.tileSize,
-				entityH: this.config.tileSize,
-			}),
-		);
+		const id = this.fruits.length;
+		const position = this.randomPosition({
+			entityW: this.config.tileSize,
+			entityH: this.config.tileSize,
+		});
+
+		const fruit = new Fruit(id, position);
 
 		this.fruits.push(fruit);
 		this.emitNewFruit(fruit);
 
 		return fruit;
+	}
+
+	private removeFruit(id: number) {
+		this.fruits = this.fruits.filter((fruit: Fruit) => fruit.id !== id);
+		this.emitRemoveFruit(id);
 	}
 
 	private addTile(id: string) {
@@ -95,6 +102,12 @@ export default class Game {
 		socket.broadcast.emit(Events.NewPlayer, player);
 	}
 
+	private onGetFruit(player: Player, fruit: Fruit) {
+		player.addTile();
+		this.removeFruit(fruit.id);
+		this.addFruit();
+	}
+
 	private emitPreload(socket: Socket) {
 		socket.emit(Events.Preload, { 
 			players: this.players,
@@ -112,8 +125,30 @@ export default class Game {
 		this.io.emit(Events.NewFruit, fruit);
 	}
 
+	private emitRemoveFruit(id: number) {
+		this.io.emit(Events.RemoveFruit, id);
+	}
+
 	private update() {
-		this.players.forEach((player: Player) => player.update());
+		this.players.forEach((player: Player) => {
+			player.update();
+
+			const collidesWith = this.fruits.find((fruit: Fruit) =>(
+				Collision.rectToRect({
+					x: player.head.x,
+					y: player.head.y,
+					w: player.tileSize,
+					h: player.tileSize,
+				}, {
+					x: fruit.position.x,
+					y: fruit.position.y,
+					w: fruit.size,
+					h: fruit.size,
+				})
+			));
+
+			if (collidesWith) this.onGetFruit(player, collidesWith);
+		});
 	}
 
 	public start() {
