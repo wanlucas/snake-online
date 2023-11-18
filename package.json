@@ -3,8 +3,11 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
+    "start": "node dist/index.js",
     "dev": "nodemon src/index.ts",
-    "build:client": "npx webpack --config webpack.config.js"
+    "build:client": "npx webpack --config webpack.config.js",
+    "build:server": "tsc",
+    "build": "npm run build:client && npm run build:server"
   },
   "author": "Wan Lucas",
   "license": "ISC",
