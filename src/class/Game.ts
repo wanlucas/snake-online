@@ -1,5 +1,5 @@
 import { Server, Socket } from 'socket.io';
-import Player, { Direction } from './Player';
+import Player, { Direction, Tile } from './Player';
 import { ChangeDirectionPayload } from '../interface/event';
 import { Events } from '../interface/event';
 import Fruit from './Fruit';
@@ -70,6 +70,10 @@ export default class Game {
 		this.emitRemovePlayer(id);
 
 		if (!this.players.length) this.stop();
+	}
+
+	private killPlayer(player: Player) {
+		this.removePlayer(player.id);
 	}
 
 	private addFruit() : Fruit{
@@ -161,7 +165,25 @@ export default class Game {
 			if (player.head.y < 0) player.step({ x: player.head.x, y: this.height - player.tileSize });
 			if (player.head.y > this.height - player.tileSize) player.step({ x: player.head.x, y: 0 });
 
-			const collidesWith = this.fruits.find((fruit: Fruit) =>(
+			const collidedPlayer = this.players.find((p: Player) => (
+				p.body.some((tile: Tile, i) => (
+					i > 0 && Collision.rectToRect({
+						x: player.head.x,
+						y: player.head.y,
+						w: player.tileSize,
+						h: player.tileSize,
+					}, {
+						x: tile.x,
+						y: tile.y,
+						w: player.tileSize,
+						h: player.tileSize,
+					})
+				))
+			));
+
+			if (collidedPlayer) this.killPlayer(player);
+
+			const collidedFruit = this.fruits.find((fruit: Fruit) =>(
 				Collision.rectToRect({
 					x: player.head.x,
 					y: player.head.y,
@@ -175,7 +197,7 @@ export default class Game {
 				})
 			));
 
-			if (collidesWith) this.onGetFruit(player, collidesWith);
+			if (collidedFruit) this.onGetFruit(player, collidedFruit);
 		});
 	}
 
