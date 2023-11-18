@@ -4,26 +4,33 @@ import { ChangeDirectionPayload } from '../interface/event';
 import { Events } from '../interface/event';
 import Fruit from './Fruit';
 import Collision from '../utils/Collision';
+import config from '../config';
 
 interface GameConfig {
   tileSize: number;
   tickRate: number;
+	width: number;
+	height: number;
 }
 
 export default class Game {
 	private io: Server;
-	private width: number = 800;
-	private height: number = 500;
+	private width: number;
+	private height: number;
 	private players: Player[] = [];
 	private fruits: Fruit[] = [];
 	private tickInterval?: NodeJS.Timeout;
-	private config: GameConfig = {
-		tileSize: 15,
-		tickRate: 10,
+	private config: {
+		tickRate: number;
 	};
   
-	constructor (io: Server) {
+	constructor (io: Server, config: GameConfig) {
 		this.io = io;
+		this.width = config.width;
+		this.height = config.height;
+		this.config = {
+			tickRate: config.tickRate,
+		};
 
 		this.io.on(
 			Events.Connect, 
@@ -44,10 +51,10 @@ export default class Game {
 	private addPlayer(id: string): Player {
 		const player = new Player(id, {
 			initialPosition: this.randomPosition({
-				entityW: this.config.tileSize,
-				entityH: this.config.tileSize,
+				entityW: config.player.size,
+				entityH: config.player.size,
 			}),
-			tileSize: this.config.tileSize
+			tileSize: config.player.size,
 		});
 
 		this.players.push(player);
@@ -68,11 +75,13 @@ export default class Game {
 	private addFruit() : Fruit{
 		const id = this.fruits.length;
 		const position = this.randomPosition({
-			entityW: this.config.tileSize,
-			entityH: this.config.tileSize,
+			entityW: config.fruit.size,
+			entityH: config.fruit.size,
 		});
 
-		const fruit = new Fruit(id, position);
+		const fruit = new Fruit(id, position, {
+			size: config.fruit.size,
+		});
 
 		this.fruits.push(fruit);
 		this.emitNewFruit(fruit);
@@ -83,11 +92,6 @@ export default class Game {
 	private removeFruit(id: number) {
 		this.fruits = this.fruits.filter((fruit: Fruit) => fruit.id !== id);
 		this.emitRemoveFruit(id);
-	}
-
-	private addTile(id: string) {
-		const player = this.players.find((player: Player) => player.id === id);
-		player && player.addTile();
 	}
 
 	private onChangeDirection(socket: Socket, direction: Direction) {
@@ -151,6 +155,11 @@ export default class Game {
 	private update() {
 		this.players.forEach((player: Player) => {
 			player.update();
+
+			if (player.head.x < 0) player.step({ x: this.width - player.tileSize, y: player.head.y });
+			if (player.head.x > this.width - player.tileSize) player.step({ x: 0, y: player.head.y });
+			if (player.head.y < 0) player.step({ x: player.head.x, y: this.height - player.tileSize });
+			if (player.head.y > this.height - player.tileSize) player.step({ x: player.head.x, y: 0 });
 
 			const collidesWith = this.fruits.find((fruit: Fruit) =>(
 				Collision.rectToRect({

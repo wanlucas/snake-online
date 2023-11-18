@@ -62,6 +62,11 @@ export default class Player {
 		) this.direction = direction;
 	}
 
+	public step(position: Position) {
+		this.body.unshift(position);
+		this.body.pop();
+	}
+
 	private move() {
 		if (!this.direction) return;
 
@@ -84,12 +89,10 @@ export default class Player {
 			break;
 		}
 
-		this.body.unshift({ 
-			x: this.body[0].x + this.velocity.x,
-			y: this.body[0].y + this.velocity.y
+		this.step({
+			x: this.head.x + this.velocity.x,
+			y: this.head.y + this.velocity.y,
 		});
-
-		this.body.pop();
 	}
 
 	public update() {

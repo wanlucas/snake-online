@@ -1,7 +1,7 @@
 import { Position } from '../interface/entity';
 
 export interface FruitOptions {
-  size?: number;
+  size: number;
 }
 
 export default class Fruit {
@@ -10,8 +10,9 @@ export default class Fruit {
 	constructor(
     public id: number,
     public position: Position,
-    options: FruitOptions = {},
+    options: FruitOptions,
 	) {
-		this.size = options.size || 15;
+		this.size = options.size;
 	}
+
 }

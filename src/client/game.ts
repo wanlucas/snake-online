@@ -1,13 +1,16 @@
 import ClientGame from './class/ClientGame';
+import config from '../config';
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 const context = canvas.getContext('2d') as CanvasRenderingContext2D;
-const width = canvas.width;
-const height = canvas.height;
+
+canvas.width = config.width;
+canvas.height = config.height;
+canvas.style.display = 'block';
 
 const game = new ClientGame(context, {
-	width,
-	height,
+	width: config.width,
+	height: config.height,
 });
 
 window.addEventListener('keydown', (event: KeyboardEvent) => {

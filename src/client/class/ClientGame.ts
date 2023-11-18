@@ -24,8 +24,8 @@ export default class ClientGame {
 		options: ClientGameOptions,
 	) { 
 		this.context = context;
-		this.width = options.width || 800;
-		this.height = options.height || 500;
+		this.width = options.width;
+		this.height = options.height;
 		this.start();
 	}
 
