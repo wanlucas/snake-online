@@ -4,8 +4,7 @@ import { ChangeDirectionPayload } from '../interface/event';
 import { Events } from '../interface/event';
 
 interface GameConfig {
-  playerW: number;
-  playerH: number;
+  tileSize: number;
   tickRate: number;
 }
 
@@ -16,9 +15,8 @@ export default class Game {
 	private players: Player[] = [];
 	private tickInterval?: NodeJS.Timeout;
 	private config: GameConfig = {
-		playerW: 10,
-		playerH: 10,
-		tickRate: 30,
+		tileSize: 15,
+		tickRate: 10,
 	};
   
 	constructor (io: Server) {
@@ -26,7 +24,7 @@ export default class Game {
 		this.start();
 	}
 
-	private sortPosition({ entityW, entityH }: { entityW: number, entityH: number } = {
+	private randomPosition({ entityW, entityH }: { entityW: number, entityH: number } = {
 		entityW: 0,
 		entityH: 0,
 	}) {
@@ -36,8 +34,23 @@ export default class Game {
 		};
 	}
 
-	public addPlayer(player: Player) {
+	public addPlayer(id: string): Player {
+		const player = new Player(id, {
+			initialPosition: this.randomPosition({
+				entityW: this.config.tileSize,
+				entityH: this.config.tileSize,
+			}),
+			tileSize: this.config.tileSize
+		});
+
 		this.players.push(player);
+
+		return player;
+	}
+
+	public addTile(id: string) {
+		const player = this.players.find((player: Player) => player.id === id);
+		player && player.addTile();
 	}
 
 	private onMove(socket: Socket, direction: Direction) {
@@ -53,21 +66,13 @@ export default class Game {
 	private addListeners(socket: Socket) {
 		socket.on(Events.Disconnect, () => this.onDisconnect(socket.id));
 		socket.on(Events.ChangeDirection, (data: ChangeDirectionPayload) => this.onMove(socket, data));
+		socket.on('add-tile', () => this.addTile(socket.id));
 	}
 
 	private onConnect(socket: Socket) {
 		console.log(`${socket.id} connected!`);
-
-		const player = new Player(socket.id, {
-			initialPosition: this.sortPosition({
-				entityW: this.config.playerW,
-				entityH: this.config.playerH,
-			}),
-			width: this.config.playerW,
-			height: this.config.playerH,
-		});
     
-		this.addPlayer(player);
+		const player = this.addPlayer(socket.id);
 		this.addListeners(socket);
 
 		socket.emit(Events.Preload, { players: this.players });
@@ -87,14 +92,10 @@ export default class Game {
 	public start() {
 		this.io.on(Events.Connect, (socket: Socket) => this.onConnect(socket));
 
-		this.update();
 		this.tickInterval = setInterval(() => {
 			this.emitTick();
-		}, 1000 / this.config.tickRate);
-
-		setInterval(() => {
 			this.update();
-		}, 1000 / 60);
+		}, 1000 / this.config.tickRate);
 	}
 
 	public stop() {

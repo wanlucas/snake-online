@@ -26,18 +26,9 @@ export default class ClientGame {
 		this.start();
 	}
 
-	private addPlayer(player: ClientPlayer) {
-		this.players.push(player);
-	}
-
-	private onPreload({ players }: { players: Player[] }) {
-		players.forEach((player: Player) => {
-			this.addPlayer(new ClientPlayer(player));
-
-			if (player.id === this.io.id) {
-				this.localPlayer = this.players[this.players.length - 1];
-			}
-		});
+	private addPlayer(player: Player) {
+		const clientPLayer = new ClientPlayer(player);
+		this.players.push(clientPLayer);
 	}
 
 	private onTick({ players }: { players: Player[] }) {
@@ -46,37 +37,48 @@ export default class ClientGame {
 
 			if (!foundPlayer) return;
 
-			player.position = foundPlayer.position;
+			player.body = foundPlayer.body;
 			player.direction = foundPlayer.direction;
 		});
 
 		this.update();
-		this.draw();
+	}
+
+	private onPreload({ players }: { players: Player[] }) {
+		players.forEach((player: Player) => {
+			this.addPlayer(player);
+
+			if (player.id === this.io.id) {
+				this.localPlayer = this.players[this.players.length - 1];
+			}
+		});
 	}
   
 	private onNewPlayer(player: Player) {
-		this.addPlayer(new ClientPlayer(player));
+		this.addPlayer(player);
 	}
 
 	public onInput(input: string, press: boolean) {
 		if (!this.localPlayer) return;
     
 		if (!press) return;
-    
+		console.log(input);
 		switch (input) {
 		case 'd':
-			this.emitChangeDirection('r');
-			break;
+			return this.emitChangeDirection('r');
 		case 'a':
-			this.emitChangeDirection('l');
-			break;
+			return this.emitChangeDirection('l');
 		case 'w':
-			this.emitChangeDirection('u');
-			break;
+			return this.emitChangeDirection('u');
 		case 's':
-			this.emitChangeDirection('d');
-			break;
+			return this.emitChangeDirection('d');
+		case 'f':
+			return this.emitAddTile();
 		}
+	}
+
+	private emitAddTile() {
+		this.io.emit('add-tile');
 	}
 
 	private emitChangeDirection(direction: Direction) {
@@ -88,6 +90,7 @@ export default class ClientGame {
 
 	private draw() {
 		this.context.clearRect(0, 0, this.width, this.height);
+
 		this.players.forEach((player: ClientPlayer) => {
 			player.draw(this.context);
 		});
@@ -97,6 +100,8 @@ export default class ClientGame {
 		this.players.forEach((player: ClientPlayer) => {
 			player.update();
 		});
+
+		this.draw();
 	}
 
 	public start() {

@@ -1,25 +1,27 @@
 export type Direction = 'r' | 'l' | 'u' | 'd';
 
+export interface Position {
+	x: number;
+	y: number;
+}
+
+export interface Tile extends Position {
+	isNew?: boolean;
+}
+
 interface PlayerOptions {
-  width: number;
-  height: number;
+  tileSize: number;
   initialPosition: {
     x: number;
     y: number;
   },
 }
 
-
 export default class Player {
 	public id: string;
-	public headW: number;
-	public headH: number;
 	public direction?: Direction;
-
-	public position: {
-    x: number;
-    y: number;
-  };
+	public tileSize: number = 5;
+	public body: Tile[] = [];
 
 	public velocity: {
     x: number;
@@ -28,13 +30,12 @@ export default class Player {
 
 	constructor(id: string, options: PlayerOptions) {
 		this.id = id;
-		this.headW = options.width;
-		this.headH = options.height;
+		this.tileSize = options.tileSize;
 
-		this.position = {
+		this.body.push({
 			x: options.initialPosition.x,
 			y: options.initialPosition.y,
-		};
+		});
 
 		this.velocity = {
 			x: 0,
@@ -42,28 +43,41 @@ export default class Player {
 		};
 	}
 
+	public addTile() {
+		const head = this.body[0];
+
+		this.body.unshift({
+			...head,
+			isNew: true,
+		});
+	}
+
 	private move() {
 		switch (this.direction) {
 		case 'r':
-			this.velocity.x = 1;
+			this.velocity.x = this.tileSize;
 			this.velocity.y = 0;
 			break;
 		case 'l':
-			this.velocity.x = -1;
+			this.velocity.x = -this.tileSize;
 			this.velocity.y = 0;
 			break;
 		case 'u':
-			this.velocity.y = -1;
+			this.velocity.y = -this.tileSize;
 			this.velocity.x = 0;
 			break;
 		case 'd':
-			this.velocity.y = 1;
+			this.velocity.y = this.tileSize;
 			this.velocity.x = 0;
 			break;
 		}
 
-		this.position.x += this.velocity.x;
-		this.position.y += this.velocity.y;
+		this.body.unshift({ 
+			x: this.body[0].x + this.velocity.x,
+			y: this.body[0].y + this.velocity.y
+		});
+
+		this.body.pop();
 	}
 
 	public update() {

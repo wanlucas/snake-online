@@ -20,14 +20,3 @@ export interface PreloadPayload {
 export type NewPlayerPayload = Player;
 
 export type ChangeDirectionPayload = Direction;
-
-
-
-export enum Events {
-  tick,
-  connect,
-  disconnect,
-  newPlayer,
-  preload,
-  changeDirection,
-}
