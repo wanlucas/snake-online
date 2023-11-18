@@ -2,6 +2,7 @@ import { Server, Socket } from 'socket.io';
 import Player, { Direction } from './Player';
 import { ChangeDirectionPayload } from '../interface/event';
 import { Events } from '../interface/event';
+import Fruit from './Fruit';
 
 interface GameConfig {
   tileSize: number;
@@ -13,6 +14,7 @@ export default class Game {
 	private width: number = 800;
 	private height: number = 500;
 	private players: Player[] = [];
+	private fruits: Fruit[] = [];
 	private tickInterval?: NodeJS.Timeout;
 	private config: GameConfig = {
 		tileSize: 15,
@@ -34,7 +36,7 @@ export default class Game {
 		};
 	}
 
-	public addPlayer(id: string): Player {
+	private addPlayer(id: string): Player {
 		const player = new Player(id, {
 			initialPosition: this.randomPosition({
 				entityW: this.config.tileSize,
@@ -48,7 +50,21 @@ export default class Game {
 		return player;
 	}
 
-	public addTile(id: string) {
+	private addFruit() : Fruit{
+		const fruit = new Fruit(
+			this.randomPosition({
+				entityW: this.config.tileSize,
+				entityH: this.config.tileSize,
+			}),
+		);
+
+		this.fruits.push(fruit);
+		this.emitNewFruit(fruit);
+
+		return fruit;
+	}
+
+	private addTile(id: string) {
 		const player = this.players.find((player: Player) => player.id === id);
 		player && player.addTile();
 	}
@@ -75,14 +91,25 @@ export default class Game {
 		const player = this.addPlayer(socket.id);
 		this.addListeners(socket);
 
-		socket.emit(Events.Preload, { players: this.players });
+		this.emitPreload(socket);
 		socket.broadcast.emit(Events.NewPlayer, player);
 	}
 
-	public emitTick() {
+	private emitPreload(socket: Socket) {
+		socket.emit(Events.Preload, { 
+			players: this.players,
+			fruits: this.fruits,
+		});
+	}
+
+	private emitTick() {
 		this.io.emit(Events.Tick, {
 			players: this.players,
 		});
+	}
+
+	private emitNewFruit(fruit: Fruit) {
+		this.io.emit(Events.NewFruit, fruit);
 	}
 
 	private update() {
@@ -91,7 +118,8 @@ export default class Game {
 
 	public start() {
 		this.io.on(Events.Connect, (socket: Socket) => this.onConnect(socket));
-
+		
+		this.addFruit();
 		this.tickInterval = setInterval(() => {
 			this.emitTick();
 			this.update();

@@ -1,5 +1,7 @@
+import Fruit from '../../class/Fruit';
 import Player, { Direction } from '../../class/Player';
-import { Events, NewPlayerPayload, PreloadPayload, TickPayload } from '../../interface/event';
+import { Events, NewFruitPayload, NewPlayerPayload, PreloadPayload, TickPayload } from '../../interface/event';
+import ClientFruit from './ClientFruit';
 import ClientPlayer from './ClientPlayer';
 import io, { Socket } from 'socket.io-client';
 
@@ -14,6 +16,7 @@ export default class ClientGame {
 	private height: number;
 	private io: Socket = io();
 	private players: ClientPlayer[] = [];
+	private fruits: ClientFruit[] = [];
 	private localPlayer?: ClientPlayer;
 
 	constructor(
@@ -31,6 +34,11 @@ export default class ClientGame {
 		this.players.push(clientPLayer);
 	}
 
+	private addFruit(fruit: Fruit) {
+		const clientFruit = new ClientFruit(fruit);
+		this.fruits.push(clientFruit);
+	}
+
 	private onTick({ players }: { players: Player[] }) {
 		this.players.forEach((player: ClientPlayer) => {
 			const foundPlayer = players.find((p: Player) => p.id === player.id);
@@ -44,7 +52,7 @@ export default class ClientGame {
 		this.update();
 	}
 
-	private onPreload({ players }: { players: Player[] }) {
+	private onPreload({ players, fruits }: PreloadPayload) {
 		players.forEach((player: Player) => {
 			this.addPlayer(player);
 
@@ -52,17 +60,25 @@ export default class ClientGame {
 				this.localPlayer = this.players[this.players.length - 1];
 			}
 		});
+
+		fruits.forEach((fruit: Fruit) => {
+			this.addFruit(fruit);
+		});
 	}
   
 	private onNewPlayer(player: Player) {
 		this.addPlayer(player);
 	}
 
+	private onNewFruit(fruit: NewFruitPayload) {
+		this.addFruit(fruit);
+	}
+
 	public onInput(input: string, press: boolean) {
 		if (!this.localPlayer) return;
     
 		if (!press) return;
-		console.log(input);
+
 		switch (input) {
 		case 'd':
 			return this.emitChangeDirection('r');
@@ -94,6 +110,10 @@ export default class ClientGame {
 		this.players.forEach((player: ClientPlayer) => {
 			player.draw(this.context);
 		});
+
+		this.fruits.forEach((fruit: ClientFruit) => {
+			fruit.draw(this.context);
+		});
 	}
 
 	private update() {
@@ -108,6 +128,7 @@ export default class ClientGame {
 		this.io.on(Events.Preload, (data: PreloadPayload) => this.onPreload(data));
 		this.io.on(Events.NewPlayer, (data: NewPlayerPayload) => this.onNewPlayer(data));
 		this.io.on(Events.Tick, (data: TickPayload) => this.onTick(data));
+		this.io.on(Events.NewFruit, (data: NewFruitPayload) => this.onNewFruit(data));
 	}
 
 	public stop() {

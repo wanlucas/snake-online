@@ -1,3 +1,4 @@
+import Fruit from '../class/Fruit';
 import Player, { Direction } from '../class/Player';
 
 export enum Events {
@@ -5,6 +6,7 @@ export enum Events {
   Connect = 'connect',
   Disconnect = 'disconnect',
   NewPlayer = 'new-player',
+  NewFruit = 'new-fruit',
   Preload = 'preload',
   ChangeDirection = 'change-direction',
 }
@@ -15,7 +17,10 @@ export interface TickPayload {
 
 export interface PreloadPayload {
   players: Player[];
+  fruits: Fruit[];
 }
+
+export type NewFruitPayload = Fruit;
 
 export type NewPlayerPayload = Player;
 

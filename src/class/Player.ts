@@ -1,9 +1,6 @@
-export type Direction = 'r' | 'l' | 'u' | 'd';
+import { Position } from '../interface/entity';
 
-export interface Position {
-	x: number;
-	y: number;
-}
+export type Direction = 'r' | 'l' | 'u' | 'd';
 
 export interface Tile extends Position {
 	isNew?: boolean;
@@ -41,6 +38,10 @@ export default class Player {
 			x: 0,
 			y: 0,
 		};
+	}
+
+	get head() {
+		return this.body[0];
 	}
 
 	public addTile() {
