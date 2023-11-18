@@ -52,7 +52,18 @@ export default class Player {
 		});
 	}
 
+	public changeDirection(direction: Direction) {
+		if (this.direction === 'r' && direction !== 'l'
+		|| this.direction === 'l' && direction !== 'r'
+		|| this.direction === 'u' && direction !== 'd'
+		|| this.direction === 'd' && direction !== 'u'
+		|| !this.direction
+		) this.direction = direction;
+	}
+
 	private move() {
+		if (!this.direction) return;
+
 		switch (this.direction) {
 		case 'r':
 			this.velocity.x = this.tileSize;

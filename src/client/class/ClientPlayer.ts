@@ -12,9 +12,8 @@ export default class ClientPlayer extends Player {
 		context.fillStyle = 'white';
 
 		for (let i = this.body.length - 1; i >= 0; i--) {
-			const { x, y, isNew } = this.body[i];
+			const { x, y } = this.body[i];
 
-			context.fillStyle = isNew ? 'red' : 'white';
 			context.fillRect(
 				x, y, 
 				this.tileSize,

@@ -53,10 +53,10 @@ export default class Game {
 		player && player.addTile();
 	}
 
-	private onMove(socket: Socket, direction: Direction) {
+	private onChangeDirection(socket: Socket, direction: Direction) {
 		const player = this.players.find((p: Player) => p.id === socket.id);
 		if (!player) return;
-		player.direction = direction;
+		player.changeDirection(direction);
 	}
 
 	private onDisconnect(id: string) {  
@@ -65,7 +65,7 @@ export default class Game {
 
 	private addListeners(socket: Socket) {
 		socket.on(Events.Disconnect, () => this.onDisconnect(socket.id));
-		socket.on(Events.ChangeDirection, (data: ChangeDirectionPayload) => this.onMove(socket, data));
+		socket.on(Events.ChangeDirection, (data: ChangeDirectionPayload) => this.onChangeDirection(socket, data));
 		socket.on('add-tile', () => this.addTile(socket.id));
 	}
 
