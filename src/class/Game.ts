@@ -24,7 +24,11 @@ export default class Game {
   
 	constructor (io: Server) {
 		this.io = io;
-		this.start();
+
+		this.io.on(
+			Events.Connect, 
+			(socket: Socket) => this.onConnect(socket)
+		);
 	}
 
 	private randomPosition({ entityW, entityH }: { entityW: number, entityH: number } = {
@@ -48,7 +52,17 @@ export default class Game {
 
 		this.players.push(player);
 
+		if (this.players.length === 1) this.start();
+
 		return player;
+	}
+
+	private removePlayer(id: string) {
+		this.players = this.players.filter((player: Player) => player.id !== id);
+
+		this.emitRemovePlayer(id);
+
+		if (!this.players.length) this.stop();
 	}
 
 	private addFruit() : Fruit{
@@ -84,12 +98,13 @@ export default class Game {
 
 	private onDisconnect(id: string) {  
 		console.log(`${id} disconnected!`);
+
+		this.removePlayer(id);
 	}
 
 	private addListeners(socket: Socket) {
 		socket.on(Events.Disconnect, () => this.onDisconnect(socket.id));
 		socket.on(Events.ChangeDirection, (data: ChangeDirectionPayload) => this.onChangeDirection(socket, data));
-		socket.on('add-tile', () => this.addTile(socket.id));
 	}
 
 	private onConnect(socket: Socket) {
@@ -106,6 +121,10 @@ export default class Game {
 		player.addTile();
 		this.removeFruit(fruit.id);
 		this.addFruit();
+	}
+
+	private emitRemovePlayer(id: string) {
+		this.io.emit(Events.RemovePlayer, id);
 	}
 
 	private emitPreload(socket: Socket) {
@@ -151,17 +170,21 @@ export default class Game {
 		});
 	}
 
-	public start() {
-		this.io.on(Events.Connect, (socket: Socket) => this.onConnect(socket));
-		
+	public start() {		
 		this.addFruit();
 		this.tickInterval = setInterval(() => {
 			this.emitTick();
 			this.update();
 		}, 1000 / this.config.tickRate);
+
+		console.log('Game started!');
 	}
 
 	public stop() {
 		clearInterval(this.tickInterval);
+		this.fruits = [];
+		this.players = [];
+
+		console.log('Game stopped!');
 	}
 }

@@ -34,6 +34,10 @@ export default class ClientGame {
 		this.players.push(clientPLayer);
 	}
 
+	private removePlayer(id: string) {
+		this.players = this.players.filter((player: ClientPlayer) => player.id !== id);
+	}
+
 	private addFruit(fruit: Fruit) {
 		const clientFruit = new ClientFruit(fruit);
 		this.fruits.push(clientFruit);
@@ -70,6 +74,10 @@ export default class ClientGame {
 		this.addPlayer(player);
 	}
 
+	private onRemovePlayer(id: string) {
+		this.removePlayer(id);
+	}
+
 	private onNewFruit(fruit: NewFruitPayload) {
 		this.addFruit(fruit);
 	}
@@ -92,13 +100,7 @@ export default class ClientGame {
 			return this.emitChangeDirection('u');
 		case 's':
 			return this.emitChangeDirection('d');
-		case 'f':
-			return this.emitAddTile();
 		}
-	}
-
-	private emitAddTile() {
-		this.io.emit('add-tile');
 	}
 
 	private emitChangeDirection(direction: Direction) {
@@ -131,6 +133,7 @@ export default class ClientGame {
 	public start() {
 		this.io.on(Events.Preload, (data: PreloadPayload) => this.onPreload(data));
 		this.io.on(Events.NewPlayer, (data: NewPlayerPayload) => this.onNewPlayer(data));
+		this.io.on(Events.RemovePlayer, (id: string) => this.onRemovePlayer(id));
 		this.io.on(Events.Tick, (data: TickPayload) => this.onTick(data));
 		this.io.on(Events.NewFruit, (data: NewFruitPayload) => this.onNewFruit(data));
 		this.io.on(Events.RemoveFruit, (id: number) => this.onRemoveFruit(id));
