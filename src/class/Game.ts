@@ -119,9 +119,10 @@ export default class Game {
 		console.log(`${socket.id} connected!`);
     
 		const player = this.addPlayer(socket.id);
+	
 		this.addListeners(socket);
-
 		this.emitPreload(socket);
+	
 		socket.broadcast.emit(Events.NewPlayer, player);
 	}
 
@@ -148,6 +149,10 @@ export default class Game {
 		}, Date.now());
 	}
 
+	private emitPlayerMove(player: Player) {
+		this.io.emit(Events.PlayerMove, player);
+	}
+
 	private emitNewFruit(fruit: Fruit) {
 		this.io.emit(Events.NewFruit, fruit);
 	}
@@ -159,6 +164,7 @@ export default class Game {
 	private update() {
 		this.players.forEach((player: Player) => {
 			player.update();
+			this.emitPlayerMove(player);
 
 			if (player.head.x < 0) player.step({ x: this.width - player.tileSize, y: player.head.y });
 			if (player.head.x > this.width - player.tileSize) player.step({ x: 0, y: player.head.y });
@@ -203,8 +209,8 @@ export default class Game {
 
 	public start() {		
 		this.addFruit();
+
 		this.tickInterval = setInterval(() => {
-			this.emitTick();
 			this.update();
 		}, 1000 / this.config.tickRate);
 

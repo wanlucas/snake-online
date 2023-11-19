@@ -45,17 +45,19 @@ export default class ClientGame {
 	}
 
 	private onTick({ players }: { players: Player[] }, timestamp: number) {
-		this.latency = Date.now() - timestamp;
-		this.players.forEach((player: ClientPlayer) => {
-			const foundPlayer = players.find((p: Player) => p.id === player.id);
+		setTimeout(() => {
+			this.latency = Date.now() - timestamp;
+			this.players.forEach((player: ClientPlayer) => {
+				const foundPlayer = players.find((p: Player) => p.id === player.id);
 
-			if (!foundPlayer) return;
+				if (!foundPlayer) return;
 
-			player.body = foundPlayer.body;
-			player.direction = foundPlayer.direction;
-		});
+				player.body = foundPlayer.body;
+				player.direction = foundPlayer.direction;
+			});
 
-		this.update();
+			this.update();
+		}, 100);
 	}
 
 	private onPreload({ players, fruits }: PreloadPayload) {
@@ -78,6 +80,15 @@ export default class ClientGame {
 
 	private onRemovePlayer(id: string) {
 		this.removePlayer(id);
+	}
+
+	private onPlayerMove(player: Player) {
+		const foundPlayer = this.players.find((p: ClientPlayer) => p.id === player.id);
+
+		if (!foundPlayer) return;
+
+		foundPlayer.body = player.body;
+		foundPlayer.direction = player.direction;
 	}
 
 	private onNewFruit(fruit: NewFruitPayload) {
@@ -143,6 +154,11 @@ export default class ClientGame {
 		this.io.on(Events.Tick, (data: TickPayload, timestamp: number) => this.onTick(data, timestamp));
 		this.io.on(Events.NewFruit, (data: NewFruitPayload) => this.onNewFruit(data));
 		this.io.on(Events.RemoveFruit, (id: number) => this.onRemoveFruit(id));
+		this.io.on(Events.PlayerMove, (data: Player) => this.onPlayerMove(data));
+
+		setInterval(() => {
+			this.draw();
+		}, 1000 / 60);
 	}
 
 	public stop() {
