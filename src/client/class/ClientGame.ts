@@ -1,6 +1,6 @@
 import Fruit from '../../class/Fruit';
-import Player, { Direction } from '../../class/Player';
-import { Events, NewFruitPayload, NewPlayerPayload, PreloadPayload, TickPayload } from '../../interface/event';
+import Player from '../../class/Player';
+import { Events, NewFruitPayload, NewPlayerPayload, PreloadPayload } from '../../interface/event';
 import ClientFruit from './ClientFruit';
 import ClientPlayer from './ClientPlayer';
 import io, { Socket } from 'socket.io-client';
@@ -27,12 +27,16 @@ export default class ClientGame {
 		this.context = context;
 		this.width = options.width;
 		this.height = options.height;
-		this.start();
+		this.open();
 	}
 
 	private addPlayer(player: Player) {
 		const clientPLayer = new ClientPlayer(player);
 		this.players.push(clientPLayer);
+	}
+	
+	private setLocalPlayer(player: Player) {
+		this.localPlayer = new ClientPlayer(player);
 	}
 
 	private removePlayer(id: string) {
@@ -44,36 +48,19 @@ export default class ClientGame {
 		this.fruits.push(clientFruit);
 	}
 
-	private onTick({ players }: { players: Player[] }, timestamp: number) {
-		setTimeout(() => {
-			this.latency = Date.now() - timestamp;
-			this.players.forEach((player: ClientPlayer) => {
-				const foundPlayer = players.find((p: Player) => p.id === player.id);
-
-				if (!foundPlayer) return;
-
-				player.body = foundPlayer.body;
-				player.direction = foundPlayer.direction;
-			});
-
-			this.update();
-		}, 100);
-	}
-
 	private onPreload({ players, fruits }: PreloadPayload) {
 		players.forEach((player: Player) => {
-			this.addPlayer(player);
-
-			if (player.id === this.io.id) {
-				this.localPlayer = this.players[this.players.length - 1];
-			}
+			if (player.id === this.io.id) this.setLocalPlayer(player);
+			else this.addPlayer(player);
 		});
 
 		fruits.forEach((fruit: Fruit) => {
 			this.addFruit(fruit);
 		});
+
+		this.start();
 	}
-  
+
 	private onNewPlayer(player: Player) {
 		this.addPlayer(player);
 	}
@@ -106,21 +93,18 @@ export default class ClientGame {
 
 		switch (input) {
 		case 'd':
-			return this.emitChangeDirection('r');
+			return this.localPlayer.changeDirection('r');
 		case 'a':
-			return this.emitChangeDirection('l');
+			return this.localPlayer.changeDirection('l');
 		case 'w':
-			return this.emitChangeDirection('u');
+			return this.localPlayer.changeDirection('u');
 		case 's':
-			return this.emitChangeDirection('d');
+			return this.localPlayer.changeDirection('d');
 		}
 	}
 
-	private emitChangeDirection(direction: Direction) {
-		if (!this.localPlayer) return;
-    
-		this.localPlayer.direction = direction;
-		this.io.emit(Events.ChangeDirection, direction);
+	private emitMove() {
+		this.io.emit(Events.PlayerMove, this.localPlayer!.direction);
 	}
 
 	private draw() {
@@ -137,6 +121,8 @@ export default class ClientGame {
 		this.players.forEach((player: ClientPlayer) => {
 			player.draw(this.context);
 		});
+
+		this.localPlayer!.draw(this.context);
 	}
 
 	private update() {
@@ -144,17 +130,27 @@ export default class ClientGame {
 			player.update();
 		});
 
-		this.draw();
+		this.localPlayer!.update();
+		this.emitMove();
 	}
 
-	public start() {
+	public open() {
+		this.io.connect();
+
 		this.io.on(Events.Preload, (data: PreloadPayload) => this.onPreload(data));
 		this.io.on(Events.NewPlayer, (data: NewPlayerPayload) => this.onNewPlayer(data));
 		this.io.on(Events.RemovePlayer, (id: string) => this.onRemovePlayer(id));
-		this.io.on(Events.Tick, (data: TickPayload, timestamp: number) => this.onTick(data, timestamp));
 		this.io.on(Events.NewFruit, (data: NewFruitPayload) => this.onNewFruit(data));
 		this.io.on(Events.RemoveFruit, (id: number) => this.onRemoveFruit(id));
 		this.io.on(Events.PlayerMove, (data: Player) => this.onPlayerMove(data));
+	}
+
+	public start() {
+		if (!this.localPlayer) return;
+
+		setInterval(() => {
+			this.update();
+		}, 1000 / 15);
 
 		setInterval(() => {
 			this.draw();
@@ -163,5 +159,9 @@ export default class ClientGame {
 
 	public stop() {
 		this.io.disconnect();
+
+		this.localPlayer = undefined;
+		this.players = [];
+		this.fruits = [];
 	}
 }

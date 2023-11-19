@@ -12,7 +12,6 @@ const port = process.env.PORT || 8080;
 
 const game = new Game(io, {
 	tileSize: 5,
-	tickRate: 10,
 	width: config.width,
 	height: config.height,
 });

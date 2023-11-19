@@ -1,6 +1,5 @@
 import { Server, Socket } from 'socket.io';
 import Player, { Direction, Tile } from './Player';
-import { ChangeDirectionPayload } from '../interface/event';
 import { Events } from '../interface/event';
 import Fruit from './Fruit';
 import Collision from '../utils/Collision';
@@ -8,7 +7,6 @@ import config from '../config';
 
 interface GameConfig {
   tileSize: number;
-  tickRate: number;
 	width: number;
 	height: number;
 }
@@ -20,17 +18,11 @@ export default class Game {
 	private players: Player[] = [];
 	private fruits: Fruit[] = [];
 	private tickInterval?: NodeJS.Timeout;
-	private config: {
-		tickRate: number;
-	};
   
 	constructor (io: Server, config: GameConfig) {
 		this.io = io;
 		this.width = config.width;
 		this.height = config.height;
-		this.config = {
-			tickRate: config.tickRate,
-		};
 
 		this.io.on(
 			Events.Connect, 
@@ -98,11 +90,11 @@ export default class Game {
 		this.emitRemoveFruit(id);
 	}
 
-	private onChangeDirection(socket: Socket, direction: Direction) {
-		const player = this.players.find((p: Player) => p.id === socket.id);
-		if (!player) return;
-		player.changeDirection(direction);
-	}
+	// private onChangeDirection(socket: Socket, direction: Direction) {
+	// 	const player = this.players.find((p: Player) => p.id === socket.id);
+	// 	if (!player) return;
+	// 	player.changeDirection(direction);
+	// }
 
 	private onDisconnect(id: string) {  
 		console.log(`${id} disconnected!`);
@@ -112,7 +104,9 @@ export default class Game {
 
 	private addListeners(socket: Socket) {
 		socket.on(Events.Disconnect, () => this.onDisconnect(socket.id));
-		socket.on(Events.ChangeDirection, (data: ChangeDirectionPayload) => this.onChangeDirection(socket, data));
+		socket.on(Events.PlayerMove, (direction: Direction) => this.onPlayerMove(socket, direction));
+		// socket.on(Events.ChangeDirection, (data: ChangeDirectionPayload) => this.onChangeDirection(socket, data));
+
 	}
 
 	private onConnect(socket: Socket) {
@@ -132,8 +126,54 @@ export default class Game {
 		this.addFruit();
 	}
 
-	private emitRemovePlayer(id: string) {
-		this.io.emit(Events.RemovePlayer, id);
+	private onPlayerMove(socket: Socket, direction: Direction) {
+		const player = this.players.find((p: Player) => p.id === socket.id);
+		
+		if (!player) return;
+
+		player.changeDirection(direction);
+		player.update();
+
+		this.emitPlayerUpdate(socket, player);
+
+		if (player.head.x < 0) player.step({ x: this.width - player.tileSize, y: player.head.y });
+		if (player.head.x > this.width - player.tileSize) player.step({ x: 0, y: player.head.y });
+		if (player.head.y < 0) player.step({ x: player.head.x, y: this.height - player.tileSize });
+		if (player.head.y > this.height - player.tileSize) player.step({ x: player.head.x, y: 0 });
+
+		const collidedPlayer = this.players.find((p: Player) => (
+			p.body.some((tile: Tile, i) => (
+				i > 0 && Collision.rectToRect({
+					x: player.head.x,
+					y: player.head.y,
+					w: player.tileSize,
+					h: player.tileSize,
+				}, {
+					x: tile.x,
+					y: tile.y,
+					w: player.tileSize,
+					h: player.tileSize,
+				})
+			))
+		));
+
+		if (collidedPlayer) this.killPlayer(player);
+
+		const collidedFruit = this.fruits.find((fruit: Fruit) => (
+			Collision.rectToRect({
+				x: player.head.x,
+				y: player.head.y,
+				w: player.tileSize,
+				h: player.tileSize,
+			}, {
+				x: fruit.position.x,
+				y: fruit.position.y,
+				w: fruit.size,
+				h: fruit.size,
+			})
+		));
+
+		if (collidedFruit) this.onGetFruit(player, collidedFruit);
 	}
 
 	private emitPreload(socket: Socket) {
@@ -141,16 +181,6 @@ export default class Game {
 			players: this.players,
 			fruits: this.fruits,
 		});
-	}
-
-	private emitTick() {
-		this.io.emit(Events.Tick, {
-			players: this.players,
-		}, Date.now());
-	}
-
-	private emitPlayerMove(player: Player) {
-		this.io.emit(Events.PlayerMove, player);
 	}
 
 	private emitNewFruit(fruit: Fruit) {
@@ -161,58 +191,16 @@ export default class Game {
 		this.io.emit(Events.RemoveFruit, id);
 	}
 
-	private update() {
-		this.players.forEach((player: Player) => {
-			player.update();
-			this.emitPlayerMove(player);
+	private emitRemovePlayer(id: string) {
+		this.io.emit(Events.RemovePlayer, id);
+	}
 
-			if (player.head.x < 0) player.step({ x: this.width - player.tileSize, y: player.head.y });
-			if (player.head.x > this.width - player.tileSize) player.step({ x: 0, y: player.head.y });
-			if (player.head.y < 0) player.step({ x: player.head.x, y: this.height - player.tileSize });
-			if (player.head.y > this.height - player.tileSize) player.step({ x: player.head.x, y: 0 });
-
-			const collidedPlayer = this.players.find((p: Player) => (
-				p.body.some((tile: Tile, i) => (
-					i > 0 && Collision.rectToRect({
-						x: player.head.x,
-						y: player.head.y,
-						w: player.tileSize,
-						h: player.tileSize,
-					}, {
-						x: tile.x,
-						y: tile.y,
-						w: player.tileSize,
-						h: player.tileSize,
-					})
-				))
-			));
-
-			if (collidedPlayer) this.killPlayer(player);
-
-			const collidedFruit = this.fruits.find((fruit: Fruit) =>(
-				Collision.rectToRect({
-					x: player.head.x,
-					y: player.head.y,
-					w: player.tileSize,
-					h: player.tileSize,
-				}, {
-					x: fruit.position.x,
-					y: fruit.position.y,
-					w: fruit.size,
-					h: fruit.size,
-				})
-			));
-
-			if (collidedFruit) this.onGetFruit(player, collidedFruit);
-		});
+	private emitPlayerUpdate(socket: Socket, player: Player) {
+		socket.broadcast.emit(Events.PlayerMove, player);
 	}
 
 	public start() {		
 		this.addFruit();
-
-		this.tickInterval = setInterval(() => {
-			this.update();
-		}, 1000 / this.config.tickRate);
 
 		console.log('Game started!');
 	}
