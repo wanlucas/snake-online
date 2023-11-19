@@ -40,7 +40,9 @@ export default class ClientGame {
 	}
 
 	private removePlayer(id: string) {
-		this.players = this.players.filter((player: ClientPlayer) => player.id !== id);
+		if (this.localPlayer && this.localPlayer.id === id) {
+			this.localPlayer = undefined;
+		} else this.players = this.players.filter((player: ClientPlayer) => player.id !== id);
 	}
 
 	private addFruit(fruit: Fruit) {
@@ -76,6 +78,10 @@ export default class ClientGame {
 
 		foundPlayer.body = player.body;
 		foundPlayer.direction = player.direction;
+	}
+
+	private onGetFruit() {
+		this.localPlayer!.addTile();
 	}
 
 	private onNewFruit(fruit: NewFruitPayload) {
@@ -155,6 +161,7 @@ export default class ClientGame {
 		this.io.on(Events.NewFruit, (data: NewFruitPayload) => this.onNewFruit(data));
 		this.io.on(Events.RemoveFruit, (id: number) => this.onRemoveFruit(id));
 		this.io.on(Events.PlayerMove, (data: Player) => this.onPlayerMove(data));
+		this.io.on(Events.GetFruit, () => this.onGetFruit());
 	}
 
 	public start() {

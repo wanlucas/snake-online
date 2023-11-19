@@ -66,6 +66,7 @@ export default class Game {
 
 	private killPlayer(player: Player) {
 		this.removePlayer(player.id);
+		this.emitRemovePlayer(player.id);
 	}
 
 	private addFruit() : Fruit{
@@ -116,6 +117,7 @@ export default class Game {
 
 	private onGetFruit(player: Player, fruit: Fruit) {
 		player.addTile();
+		this.emitGetFruit(player.id);
 		this.removeFruit(fruit.id);
 		this.addFruit();
 	}
@@ -179,6 +181,10 @@ export default class Game {
 
 	private emitNewFruit(fruit: Fruit) {
 		this.io.emit(Events.NewFruit, fruit);
+	}
+
+	private emitGetFruit(playerId: string) {
+		this.io.to(playerId).emit(Events.GetFruit);
 	}
 
 	private emitRemoveFruit(id: number) {

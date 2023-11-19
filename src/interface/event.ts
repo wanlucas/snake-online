@@ -10,6 +10,7 @@ export enum Events {
   PlayerMove = 'player-move',
   NewFruit = 'new-fruit',
   RemoveFruit = 'remove-fruit',
+  GetFruit = 'get-fruit',
   Preload = 'preload',
 }
 
