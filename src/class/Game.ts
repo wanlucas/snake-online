@@ -90,11 +90,7 @@ export default class Game {
 		this.emitRemoveFruit(id);
 	}
 
-	// private onChangeDirection(socket: Socket, direction: Direction) {
-	// 	const player = this.players.find((p: Player) => p.id === socket.id);
-	// 	if (!player) return;
-	// 	player.changeDirection(direction);
-	// }
+
 
 	private onDisconnect(id: string) {  
 		console.log(`${id} disconnected!`);
@@ -105,8 +101,6 @@ export default class Game {
 	private addListeners(socket: Socket) {
 		socket.on(Events.Disconnect, () => this.onDisconnect(socket.id));
 		socket.on(Events.PlayerMove, (direction: Direction) => this.onPlayerMove(socket, direction));
-		// socket.on(Events.ChangeDirection, (data: ChangeDirectionPayload) => this.onChangeDirection(socket, data));
-
 	}
 
 	private onConnect(socket: Socket) {

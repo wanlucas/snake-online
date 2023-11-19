@@ -11,7 +11,6 @@ export enum Events {
   NewFruit = 'new-fruit',
   RemoveFruit = 'remove-fruit',
   Preload = 'preload',
-  ChangeDirection = 'change-direction',
 }
 
 export interface TickPayload {

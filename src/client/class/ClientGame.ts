@@ -125,13 +125,25 @@ export default class ClientGame {
 		this.localPlayer!.draw(this.context);
 	}
 
+	private updateLocalPlayer() {
+		// TODO - Remover !
+		const player = this.localPlayer!;
+
+		player.update();
+		this.emitMove();
+
+		if (player.head.x < 0) player.step({ x: this.width - player.tileSize, y: player.head.y });
+		if (player.head.x > this.width - player.tileSize) player.step({ x: 0, y: player.head.y });
+		if (player.head.y < 0) player.step({ x: player.head.x, y: this.height - player.tileSize });
+		if (player.head.y > this.height - player.tileSize) player.step({ x: player.head.x, y: 0 });
+	}
+
 	private update() {
 		this.players.forEach((player: ClientPlayer) => {
 			player.update();
 		});
 
-		this.localPlayer!.update();
-		this.emitMove();
+		this.updateLocalPlayer();
 	}
 
 	public open() {
