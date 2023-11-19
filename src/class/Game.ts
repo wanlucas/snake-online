@@ -145,7 +145,7 @@ export default class Game {
 	private emitTick() {
 		this.io.emit(Events.Tick, {
 			players: this.players,
-		});
+		}, Date.now());
 	}
 
 	private emitNewFruit(fruit: Fruit) {

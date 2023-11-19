@@ -18,6 +18,7 @@ export default class ClientGame {
 	private players: ClientPlayer[] = [];
 	private fruits: ClientFruit[] = [];
 	private localPlayer?: ClientPlayer;
+	public latency: number = 0;
 
 	constructor(
 		context: CanvasRenderingContext2D,
@@ -43,7 +44,8 @@ export default class ClientGame {
 		this.fruits.push(clientFruit);
 	}
 
-	private onTick({ players }: { players: Player[] }) {
+	private onTick({ players }: { players: Player[] }, timestamp: number) {
+		this.latency = Date.now() - timestamp;
 		this.players.forEach((player: ClientPlayer) => {
 			const foundPlayer = players.find((p: Player) => p.id === player.id);
 
@@ -113,6 +115,10 @@ export default class ClientGame {
 	private draw() {
 		this.context.clearRect(0, 0, this.width, this.height);
 
+		this.context.font = '12px serif';
+		this.context.fillStyle = 'green';
+		this.context.fillText(String(this.latency), 10, 20);
+
 		this.fruits.forEach((fruit: ClientFruit) => {
 			fruit.draw(this.context);
 		});
@@ -134,7 +140,7 @@ export default class ClientGame {
 		this.io.on(Events.Preload, (data: PreloadPayload) => this.onPreload(data));
 		this.io.on(Events.NewPlayer, (data: NewPlayerPayload) => this.onNewPlayer(data));
 		this.io.on(Events.RemovePlayer, (id: string) => this.onRemovePlayer(id));
-		this.io.on(Events.Tick, (data: TickPayload) => this.onTick(data));
+		this.io.on(Events.Tick, (data: TickPayload, timestamp: number) => this.onTick(data, timestamp));
 		this.io.on(Events.NewFruit, (data: NewFruitPayload) => this.onNewFruit(data));
 		this.io.on(Events.RemoveFruit, (id: number) => this.onRemoveFruit(id));
 	}
