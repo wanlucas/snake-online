@@ -1,9 +1,9 @@
 import { Server, Socket } from 'socket.io';
-import Player, { Direction, Tile } from './Player';
+import Player, { Direction } from './Player';
 import { Events } from '../interface/event';
 import Fruit from './Fruit';
-import Collision from '../utils/Collision';
 import config from '../config';
+import Tile from './Tile';
 
 interface GameConfig {
   tileSize: number;
@@ -41,13 +41,12 @@ export default class Game {
 	}
 
 	private addPlayer(id: string): Player {
-		const player = new Player(id, {
-			initialPosition: this.randomPosition({
-				entityW: config.player.size,
-				entityH: config.player.size,
-			}),
-			tileSize: config.player.size,
+		const { x, y } = this.randomPosition({
+			entityW: config.player.size,
+			entityH: config.player.size,
 		});
+
+		const player = new Player({ id, x, y, tileSize: config.tileSize });
 
 		this.players.push(player);
 
@@ -71,14 +70,13 @@ export default class Game {
 
 	private addFruit() : Fruit{
 		const id = this.fruits.length;
-		const position = this.randomPosition({
+		const { size } = config.fruit;
+		const { x, y } = this.randomPosition({
 			entityW: config.fruit.size,
 			entityH: config.fruit.size,
 		});
 
-		const fruit = new Fruit(id, position, {
-			size: config.fruit.size,
-		});
+		const fruit = new Fruit({ id, x, y, width: size, height: size });
 
 		this.fruits.push(fruit);
 		this.emitNewFruit(fruit);
@@ -132,41 +130,21 @@ export default class Game {
 
 		this.emitPlayerUpdate(socket, player);
 
-		if (player.head.x < 0) player.step({ x: this.width - player.tileSize, y: player.head.y });
-		if (player.head.x > this.width - player.tileSize) player.step({ x: 0, y: player.head.y });
-		if (player.head.y < 0) player.step({ x: player.head.x, y: this.height - player.tileSize });
-		if (player.head.y > this.height - player.tileSize) player.step({ x: player.head.x, y: 0 });
+		if (player.head.x < 0) player.stepAt({ x: this.width - player.tileSize, y: player.head.y });
+		if (player.head.x > this.width - player.tileSize) player.stepAt({ x: 0, y: player.head.y });
+		if (player.head.y < 0) player.stepAt({ x: player.head.x, y: this.height - player.tileSize });
+		if (player.head.y > this.height - player.tileSize) player.stepAt({ x: player.head.x, y: 0 });
 
 		const collidedPlayer = this.players.find((p: Player) => (
 			p.body.some((tile: Tile, i) => (
-				i > 0 && Collision.rectToRect({
-					x: player.head.x,
-					y: player.head.y,
-					w: player.tileSize,
-					h: player.tileSize,
-				}, {
-					x: tile.x,
-					y: tile.y,
-					w: player.tileSize,
-					h: player.tileSize,
-				})
+				i > 0 && tile.collidesWith(player.head)
 			))
 		));
 
 		if (collidedPlayer) this.killPlayer(player);
 
 		const collidedFruit = this.fruits.find((fruit: Fruit) => (
-			Collision.rectToRect({
-				x: player.head.x,
-				y: player.head.y,
-				w: player.tileSize,
-				h: player.tileSize,
-			}, {
-				x: fruit.position.x,
-				y: fruit.position.y,
-				w: fruit.size,
-				h: fruit.size,
-			})
+			fruit.collidesWith(player.head)
 		));
 
 		if (collidedFruit) this.onGetFruit(player, collidedFruit);

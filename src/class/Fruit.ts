@@ -1,18 +1,18 @@
-import { Position } from '../interface/entity';
+import Entity from './Entity';
 
-export interface FruitOptions {
-  size: number;
+export interface FruitPayload {
+	id: number;
+	x: number;
+	y: number;
+  width: number;
+	height: number;
 }
 
-export default class Fruit {
-	public size: number;
+export default class Fruit extends Entity {
+	public id: number;
 
-	constructor(
-    public id: number,
-    public position: Position,
-    options: FruitOptions,
-	) {
-		this.size = options.size;
+	constructor({ id, x, y, width, height }: FruitPayload) {
+		super(x, y, width, height);
+		this.id = id;
 	}
-
 }

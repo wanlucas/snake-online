@@ -19,6 +19,7 @@ export default class ClientGame {
 	private fruits: ClientFruit[] = [];
 	private localPlayer?: ClientPlayer;
 	public latency: number = 0;
+	private localUpdateInt?: NodeJS.Timeout;
 
 	constructor(
 		context: CanvasRenderingContext2D,
@@ -40,9 +41,13 @@ export default class ClientGame {
 	}
 
 	private removePlayer(id: string) {
-		if (this.localPlayer && this.localPlayer.id === id) {
-			this.localPlayer = undefined;
-		} else this.players = this.players.filter((player: ClientPlayer) => player.id !== id);
+		this.players = this.players.filter((player: ClientPlayer) => player.id !== id);
+	}
+
+	private removeLocalPlayer() {
+		clearInterval(this.localUpdateInt);
+		this.localUpdateInt = undefined;
+		this.localPlayer = undefined;
 	}
 
 	private addFruit(fruit: Fruit) {
@@ -68,7 +73,8 @@ export default class ClientGame {
 	}
 
 	private onRemovePlayer(id: string) {
-		this.removePlayer(id);
+		if (id === this.io.id) this.removeLocalPlayer();
+		else this.removePlayer(id);
 	}
 
 	private onPlayerMove(player: Player) {
@@ -128,7 +134,9 @@ export default class ClientGame {
 			player.draw(this.context);
 		});
 
-		this.localPlayer!.draw(this.context);
+		if (!this.localPlayer) return;
+
+		this.localPlayer.draw(this.context);
 	}
 
 	private updateLocalPlayer() {
@@ -138,18 +146,10 @@ export default class ClientGame {
 		player.update();
 		this.emitMove();
 
-		if (player.head.x < 0) player.step({ x: this.width - player.tileSize, y: player.head.y });
-		if (player.head.x > this.width - player.tileSize) player.step({ x: 0, y: player.head.y });
-		if (player.head.y < 0) player.step({ x: player.head.x, y: this.height - player.tileSize });
-		if (player.head.y > this.height - player.tileSize) player.step({ x: player.head.x, y: 0 });
-	}
-
-	private update() {
-		this.players.forEach((player: ClientPlayer) => {
-			player.update();
-		});
-
-		this.updateLocalPlayer();
+		if (player.head.x < 0) player.stepAt({ x: this.width - player.tileSize, y: player.head.y });
+		if (player.head.x > this.width - player.tileSize) player.stepAt({ x: 0, y: player.head.y });
+		if (player.head.y < 0) player.stepAt({ x: player.head.x, y: this.height - player.tileSize });
+		if (player.head.y > this.height - player.tileSize) player.stepAt({ x: player.head.x, y: 0 });
 	}
 
 	public open() {
@@ -167,20 +167,12 @@ export default class ClientGame {
 	public start() {
 		if (!this.localPlayer) return;
 
-		setInterval(() => {
-			this.update();
+		this.localUpdateInt = setInterval(() => {
+			this.updateLocalPlayer();
 		}, 1000 / 15);
 
 		setInterval(() => {
 			this.draw();
 		}, 1000 / 60);
-	}
-
-	public stop() {
-		this.io.disconnect();
-
-		this.localPlayer = undefined;
-		this.players = [];
-		this.fruits = [];
 	}
 }

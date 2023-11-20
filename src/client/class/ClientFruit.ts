@@ -1,22 +1,19 @@
-import Fruit from '../../class/Fruit';
+import Fruit, { FruitPayload } from '../../class/Fruit';
+
+interface ClientFruitPayload extends FruitPayload {
+	color?: string;
+}
 
 export default class ClientFruit extends Fruit {
-	constructor(fruit: Fruit) {
-		super(
-			fruit.id,
-			fruit.position, 
-			{ size: fruit.size }
-		);
+	public color: string;
+
+	constructor({ color = 'green', ...fruit }: ClientFruitPayload) {
+		super(fruit);
+		this.color = color;
 	}
 
 	public draw(context: CanvasRenderingContext2D) {
-		context.fillStyle = 'green';
-
-		context.fillRect(
-			this.position.x,
-			this.position.y,
-			this.size,
-			this.size,
-		);
+		context.fillStyle = this.color;
+		context.fillRect(this.x, this.y, this.width, this.height);
 	}
 }

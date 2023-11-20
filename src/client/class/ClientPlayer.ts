@@ -2,9 +2,11 @@ import Player from '../../class/Player';
 
 export default class ClientPlayer extends Player {
 	constructor(player: Player) {
-		super(player.id, {
+		super({
+			id: player.id,
 			tileSize: player.tileSize,
-			initialPosition: player.body[0],
+			x: player.body[0].x,
+			y	: player.body[0].y,
 		});
 	}
 

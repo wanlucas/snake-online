@@ -1,19 +1,14 @@
 import { Position } from '../interface/entity';
+import Tile from './Tile';
 
 export type Direction = 'r' | 'l' | 'u' | 'd';
 
-export interface Tile extends Position {
-	isNew?: boolean;
+interface PlayerPayload {
+	id: string;
+	x: number;
+	y: number;
+	tileSize: number;
 }
-
-interface PlayerOptions {
-  tileSize: number;
-  initialPosition: {
-    x: number;
-    y: number;
-  },
-}
-
 export default class Player {
 	public id: string;
 	public direction?: Direction;
@@ -25,19 +20,16 @@ export default class Player {
     y: number;
   };
 
-	constructor(id: string, options: PlayerOptions) {
+	constructor({ id, x, y, tileSize }: PlayerPayload) {
 		this.id = id;
-		this.tileSize = options.tileSize;
-
-		this.body.push({
-			x: options.initialPosition.x,
-			y: options.initialPosition.y,
-		});
-
+		this.body = [];
+		this.tileSize = tileSize;
 		this.velocity = {
 			x: 0,
 			y: 0,
 		};
+
+		this.addTileAt({ x, y });
 	}
 
 	get head() {
@@ -45,12 +37,19 @@ export default class Player {
 	}
 
 	public addTile() {
-		const head = this.body[0];
-
-		this.body.unshift({
-			...head,
-			isNew: true,
+		const head = this.head;
+		const tile = new Tile({
+			x: head.x,
+			y: head.y,
+			size: this.tileSize,
 		});
+
+		this.body.unshift(tile);
+	}
+
+	public addTileAt({ x, y }: Position) {
+		const tile = new Tile({ x, y, size: this.tileSize });
+		this.body.unshift(tile);
 	}
 
 	public changeDirection(direction: Direction) {
@@ -62,8 +61,8 @@ export default class Player {
 		) this.direction = direction;
 	}
 
-	public step(position: Position) {
-		this.body.unshift(position);
+	public stepAt({ x, y }: Position) {
+		this.addTileAt({ x, y });  
 		this.body.pop();
 	}
 
@@ -89,7 +88,7 @@ export default class Player {
 			break;
 		}
 
-		this.step({
+		this.stepAt({
 			x: this.head.x + this.velocity.x,
 			y: this.head.y + this.velocity.y,
 		});
