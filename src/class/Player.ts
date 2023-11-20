@@ -36,6 +36,11 @@ export default class Player {
 		return this.body[0];
 	}
 
+	get tail() {
+		if (this.body.length === 1) return undefined;
+		return this.body[this.body.length - 1];
+	}
+
 	public addTile() {
 		const head = this.head;
 		const tile = new Tile({

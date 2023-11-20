@@ -169,10 +169,10 @@ export default class ClientGame {
 
 		this.localUpdateInt = setInterval(() => {
 			this.updateLocalPlayer();
-		}, 1000 / 15);
+		}, 1000 / 5);
 
 		setInterval(() => {
 			this.draw();
-		}, 1000 / 60);
+		}, 1000 / 5);
 	}
 }

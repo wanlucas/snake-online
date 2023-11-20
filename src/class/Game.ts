@@ -17,7 +17,6 @@ export default class Game {
 	private height: number;
 	private players: Player[] = [];
 	private fruits: Fruit[] = [];
-	private tickInterval?: NodeJS.Timeout;
   
 	constructor (io: Server, config: GameConfig) {
 		this.io = io;
@@ -184,7 +183,6 @@ export default class Game {
 	}
 
 	public stop() {
-		clearInterval(this.tickInterval);
 		this.fruits = [];
 		this.players = [];
 
