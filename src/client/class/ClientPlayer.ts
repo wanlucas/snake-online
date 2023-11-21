@@ -1,4 +1,4 @@
-import Player, { Direction } from '../../class/Player';
+import Player from '../../class/Player';
 import Sprite from './Sprite';
 
 export default class ClientPlayer extends Player {
@@ -21,7 +21,6 @@ export default class ClientPlayer extends Player {
 		this.sprite.addAnimation('body', [
 			[16, 0, 16, 16],
 			[32, 0, 16, 16],
-			[16, 0, 16, 16]
 		]);
 
 		this.sprite.addAnimation('tail', [
@@ -29,24 +28,24 @@ export default class ClientPlayer extends Player {
 		]);
 	}
 
-	public changeDirection(direction: Direction): void {
-		super.changeDirection(direction);
-		this.sprite.setDirection(direction);
-	}
-
 	public draw(context: CanvasRenderingContext2D) {
 		context.fillStyle = 'white';
 		
+		this.sprite.setDirection(this.head.direction);
 		this.sprite.draw('head', context, this.head.x, this.head.y, this.tileSize, this.tileSize);
 
 		for (let i = this.body.length - 2; i > 0; i--) {
-			const { x, y } = this.body[i];
+			const { x, y, direction } = this.body[i];
 
+			this.sprite.setDirection(direction);
 			this.sprite.draw('body', context, x, y, this.tileSize, this.tileSize);
 		}
 
 		if (!this.tail) return;
 
+		this.sprite.setDirection(this.tail.direction);
 		this.sprite.draw('tail', context, this.tail.x, this.tail.y, this.tileSize, this.tileSize);
+
+		if (!(this.body.length % 2)) this.sprite.slices.body.nextFrame();
 	} 
 }

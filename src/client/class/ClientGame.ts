@@ -4,6 +4,7 @@ import { Events, NewFruitPayload, NewPlayerPayload, PreloadPayload } from '../..
 import ClientFruit from './ClientFruit';
 import ClientPlayer from './ClientPlayer';
 import io, { Socket } from 'socket.io-client';
+import config from '../../config';
 
 export interface ClientGameOptions {
   width: number;
@@ -169,10 +170,7 @@ export default class ClientGame {
 
 		this.localUpdateInt = setInterval(() => {
 			this.updateLocalPlayer();
-		}, 1000 / 5);
-
-		setInterval(() => {
 			this.draw();
-		}, 1000 / 5);
+		}, 1000 / config.ticksPerSecond);
 	}
 }

@@ -11,7 +11,7 @@ interface PlayerPayload {
 }
 export default class Player {
 	public id: string;
-	public direction?: Direction;
+	public direction: Direction = 'u';
 	public tileSize: number = 5;
 	public body: Tile[] = [];
 
@@ -47,13 +47,14 @@ export default class Player {
 			x: head.x,
 			y: head.y,
 			size: this.tileSize,
+			direction: this.direction,
 		});
 
 		this.body.unshift(tile);
 	}
 
 	public addTileAt({ x, y }: Position) {
-		const tile = new Tile({ x, y, size: this.tileSize });
+		const tile = new Tile({ x, y, size: this.tileSize, direction: this.direction });
 		this.body.unshift(tile);
 	}
 
@@ -62,7 +63,6 @@ export default class Player {
 		|| this.direction === 'l' && direction !== 'r'
 		|| this.direction === 'u' && direction !== 'd'
 		|| this.direction === 'd' && direction !== 'u'
-		|| !this.direction
 		) this.direction = direction;
 	}
 

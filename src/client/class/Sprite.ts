@@ -1,11 +1,9 @@
 import { Direction } from '../../class/Player';
-import Animation from './Animation';
-
-type Slice = [number, number, number?, number?];
+import Animation, { Slice } from './Animation';
 
 export default class Sprite {
+	public slices: Record<string, Animation>;
 	private image: HTMLImageElement;
-	private slices: Record<string, Animation>;
 	private direction: Direction = 'u';
 
 	constructor(src: string) {
