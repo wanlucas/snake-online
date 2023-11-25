@@ -8,5 +8,6 @@ export default {
 	},
 	player: {
 		size: 15,
+		initialSize: 5,
 	}
 };

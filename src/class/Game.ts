@@ -88,8 +88,6 @@ export default class Game {
 		this.emitRemoveFruit(id);
 	}
 
-
-
 	private onDisconnect(id: string) {  
 		console.log(`${id} disconnected!`);
 
@@ -108,7 +106,12 @@ export default class Game {
 	
 		this.addListeners(socket);
 		this.emitPreload(socket);
-	
+
+		for (let i = 0; i < config.player.initialSize; i++) {
+			player.addTile();
+			this.emitGetFruit(player.id);
+		}
+
 		socket.broadcast.emit(Events.NewPlayer, player);
 	}
 
