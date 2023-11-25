@@ -1,7 +1,7 @@
 import { Position } from '../interface/entity';
 import Tile from './Tile';
 
-export type Direction = 'r' | 'l' | 'u' | 'd';
+export type Direction = 'r' | 'l' | 'u' | 'd' | 'ur' | 'ul' | 'dr' | 'dl' | 'ru' | 'rd' | 'lu' | 'ld';
 
 interface PlayerPayload {
 	id: string;
@@ -63,7 +63,13 @@ export default class Player {
 		|| this.direction === 'l' && direction !== 'r'
 		|| this.direction === 'u' && direction !== 'd'
 		|| this.direction === 'd' && direction !== 'u'
-		) this.direction = direction;
+		) {
+			if (this.direction !== direction) {
+				this.head.direction = this.direction + direction as Direction;
+			}
+
+			this.direction = direction;
+		}
 	}
 
 	public stepAt({ x, y }: Position) {
