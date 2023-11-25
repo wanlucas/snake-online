@@ -1,12 +1,16 @@
-export type Slice = [number, number, number, number];
+export type FrameDuration = number;
+
+export type Slice = [number, number, number, number, FrameDuration?];
 
 export default class Animation {
 	public slices: Slice[];
 	public frame: number;
+	public frameTick: number;
 	public image: HTMLImageElement;
 
 	constructor(image: HTMLImageElement, slices: Slice[]) {
 		this.frame = 0;
+		this.frameTick = 0;
 		this.image = image;
 		this.slices = slices.map(([sx, sy, sw, sh]: Slice) => [sx, sy, sw, sh]);
 	}
@@ -16,7 +20,7 @@ export default class Animation {
 	}
 
 	public draw(context: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, angle: number = 0) {
-		const [sx, sy, sw, sh] = this.slices[this.frame];
+		const [sx, sy, sw, sh, frameDuration = 1] = this.slices[this.frame];
 		
 		context.save();
 		context.translate(x + width / 2, y + height / 2);
@@ -32,6 +36,11 @@ export default class Animation {
 
 		context.restore();
 		
-		this.nextFrame();
+		if (this.frameTick === frameDuration) {
+			this.nextFrame();
+			this.frameTick = 0;
+		}
+
+		this.frameTick++;
 	}
 }

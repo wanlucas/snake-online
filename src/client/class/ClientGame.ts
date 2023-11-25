@@ -5,6 +5,7 @@ import ClientFruit from './ClientFruit';
 import ClientPlayer from './ClientPlayer';
 import io, { Socket } from 'socket.io-client';
 import config from '../../config';
+import Floor from './Floor';
 
 export interface ClientGameOptions {
   width: number;
@@ -18,6 +19,7 @@ export default class ClientGame {
 	private io: Socket = io();
 	private players: ClientPlayer[] = [];
 	private fruits: ClientFruit[] = [];
+	private floor: Floor;
 	private localPlayer?: ClientPlayer;
 	public latency: number = 0;
 	private localUpdateInt?: NodeJS.Timeout;
@@ -29,6 +31,11 @@ export default class ClientGame {
 		this.context = context;
 		this.width = options.width;
 		this.height = options.height;
+		this.floor = new Floor({
+			width: this.width,
+			height: this.height
+		});
+
 		this.open();
 	}
 
@@ -126,6 +133,8 @@ export default class ClientGame {
 		this.context.font = '12px serif';
 		this.context.fillStyle = 'green';
 		this.context.fillText(String(this.latency), 10, 20);
+
+		this.floor.draw(this.context);
 
 		this.fruits.forEach((fruit: ClientFruit) => {
 			fruit.draw(this.context);

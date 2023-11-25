@@ -40,6 +40,7 @@ export default class Sprite {
 	}
 
 	public draw(name: string, context: CanvasRenderingContext2D, x: number, y: number, width: number, height: number) {
-		this.slices[name].draw(context, x, y, width, height, this.angle);
+		const slice = this.slices[name];
+		slice && slice.draw(context, x, y, width, height, this.angle);
 	}
 }

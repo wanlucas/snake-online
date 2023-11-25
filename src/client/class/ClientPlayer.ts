@@ -1,4 +1,5 @@
 import Player, { Direction } from '../../class/Player';
+import Tile from '../../class/Tile';
 import Sprite from './Sprite';
 
 export default class ClientPlayer extends Player {
@@ -12,32 +13,38 @@ export default class ClientPlayer extends Player {
 			y	: player.body[0].y,
 		});
 
-		this.sprite = new Sprite('../sprites/snake-alt.png');
+		this.sprite = new Sprite('../sprites/snake-green.png');
 
 		this.sprite.addAnimation('head', [
-			[196, 0, 56, 56],
+			[0, 0, 148, 150, 2],
+			[0, 150, 148, 150, 10],
 		]);
 
 		this.sprite.addAnimation('body', [
-			[131, 61, 57, 57],
+			[0, 300, 148, 150],
+		]);
+
+		this.sprite.addAnimation('buxin', [
+			[0, 450, 148, 150],
 		]);
 
 		this.sprite.addAnimation('right-turn', [
-			[5, 69, 57, 57],
+			[0, 600, 148, 150],
 		]);
 
 		this.sprite.addAnimation('left-turn', [
-			[127, 132, 57, 57],
+			[0, 750, 148, 150],
 		]);
 
 		this.sprite.addAnimation('tail', [
-			[194, 127, 59, 59],
+			[0, 900, 148, 150],
 		]);
 	}
 
-	private getBodySprite(direction: Direction) {
-		if (direction.length === 1) return 'body';
+	private getBodySprite({ direction, newTile }: Tile) {
+		if (direction.length === 1) return newTile ? 'buxin' : 'body';
 		if (['ur', 'rd', 'dl', 'lu'].includes(direction)) return 'right-turn';
+
 		return 'left-turn';
 	}
 
@@ -46,14 +53,14 @@ export default class ClientPlayer extends Player {
 		this.sprite.draw('head', context, this.head.x, this.head.y, this.tileSize, this.tileSize);
 
 		for (let i = this.body.length - 2; i > 0; i--) {
-			const { x, y, direction } = this.body[i];
+			const current = this.body[i];
 
-			this.sprite.setDirection(direction.at(-1) as Direction);
+			this.sprite.setDirection(current.direction.at(-1) as Direction);
 
 			this.sprite.draw(
-				this.getBodySprite(direction),
+				this.getBodySprite(current),
 				context,
-				x, y,
+				current.x, current.y,
 				this.tileSize,
 				this.tileSize
 			);

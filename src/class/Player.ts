@@ -48,6 +48,7 @@ export default class Player {
 			y: head.y,
 			size: this.tileSize,
 			direction: this.direction,
+			newTile: true,
 		});
 
 		this.body.unshift(tile);
@@ -65,7 +66,12 @@ export default class Player {
 		|| this.direction === 'd' && direction !== 'u'
 		) {
 			if (this.direction !== direction) {
-				this.head.direction = this.direction + direction as Direction;
+				const newDirection = this.direction + direction as Direction;
+				this.head.direction = newDirection;
+
+				if (this.head.newTile) {
+					this.body[1].direction = newDirection;
+				}
 			}
 
 			this.direction = direction;
